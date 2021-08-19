@@ -6,9 +6,9 @@ require("dotenv").config({
 const clientConfig = require("./client-config")
 
 const isProd = process.env.NODE_ENV === "production"
-const refreshEndpoint = process.env.ENABLE_GATSBY_REFRESH_ENDPOINT
-const previewEnabled = refreshEndpoint
-  ? refreshEndpoint.toLowerCase() === "true"
+const gatsbyCloudPreview = process.env.SANITY_GATSBY_CLOUD_PREVIEW
+const previewEnabled = gatsbyCloudPreview
+  ? gatsbyCloudPreview.toLowerCase() === "true"
   : false
 
 module.exports = {
