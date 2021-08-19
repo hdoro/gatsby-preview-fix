@@ -42,12 +42,11 @@ async function handleV1Webhook(args, options) {
 }
 async function handleV2Webhook(args, options) {
     const { webhookBody, reporter } = args;
-    const { __meta: { operation = 'update', documentId, projectId, dataset }, after: document, } = webhookBody;
-    const config = options.client.config();
+    const { __meta: { operation = 'update', documentId }, after: document, } = webhookBody;
     const { overlayDrafts } = options.processingOptions;
-    if (config.projectId !== projectId || config.dataset !== dataset) {
-        return false;
-    }
+    // if (config.projectId !== projectId || config.dataset !== dataset) {
+    //   return false
+    // }
     if (operation === 'create' &&
         (document === null || document === void 0 ? void 0 : document._id) &&
         // Don't create node if a draft document w/ overlayDrafts === false
