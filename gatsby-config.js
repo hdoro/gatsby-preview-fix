@@ -6,8 +6,10 @@ require("dotenv").config({
 const clientConfig = require("./client-config")
 
 const isProd = process.env.NODE_ENV === "production"
-const previewEnabled =
-  process.env.ENABLE_GATSBY_REFRESH_ENDPOINT?.toLowerCase() === "true"
+const refreshEndpoint = process.env.ENABLE_GATSBY_REFRESH_ENDPOINT
+const previewEnabled = refreshEndpoint
+  ? refreshEndpoint.toLowerCase() === "true"
+  : false
 
 module.exports = {
   siteMetadata: {
