@@ -23,13 +23,11 @@ export interface SanityWebhookV1Body {
     };
 }
 export interface SanityWebhookV2Body {
-    __meta: {
-        webhooksVersion: "v2";
-        operation: "create" | "update" | "delete";
-        projectId: string;
-        dataset: string;
-        documentId: string;
-    };
+    __webhooksVersion: "v2";
+    operation: "create" | "update" | "delete";
+    documentId: string;
+    projectId?: string;
+    dataset?: string;
     after?: SanityDocument;
 }
 export declare type SanityWebhookBody = SanityWebhookV1Body | SanityWebhookV2Body;

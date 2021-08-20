@@ -42,7 +42,7 @@ async function handleV1Webhook(args, options) {
 }
 async function handleV2Webhook(args, options) {
     const { webhookBody, reporter } = args;
-    const { __meta: { operation = 'update', documentId: rawId, dataset, projectId }, after: document, } = webhookBody;
+    const { operation = 'update', documentId: rawId, dataset, projectId, after: document } = webhookBody;
     const documentId = documentIds_1.unprefixId(rawId);
     const config = options.client.config();
     const { overlayDrafts } = options.processingOptions;
@@ -124,7 +124,7 @@ function validateWebhookPayload(payload) {
         return false;
     }
     // Let's test V2 first as those documents could also include an `ids` object
-    if ('__meta' in payload && payload.__meta.webhooksVersion === 'v2') {
+    if ('__webhooksVersion' in payload && payload.__webhooksVersion === 'v2') {
         return 'v2';
     }
     if ('ids' in payload && typeof payload.ids === 'object') {
