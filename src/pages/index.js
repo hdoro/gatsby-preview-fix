@@ -61,7 +61,7 @@ const IndexPage = ({ data: { site, posts } }) => {
       <h1>{site.title}</h1>
       <div>
         {posts.edges.map(({ node }) => (
-          <div>
+          <div key={node.title}>
             <h2>{node.title}</h2>
           </div>
         ))}
