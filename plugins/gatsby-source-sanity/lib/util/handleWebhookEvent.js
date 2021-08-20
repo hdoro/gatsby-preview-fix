@@ -43,7 +43,7 @@ async function handleV1Webhook(args, options) {
 async function handleV2Webhook(args, options) {
     const { webhookBody, reporter } = args;
     const { operation = 'update', documentId: rawId, dataset, projectId, after: document } = webhookBody;
-    const documentId = documentIds_1.unprefixId(rawId);
+    const publishedDocumentId = documentIds_1.unprefixId(rawId);
     const config = options.client.config();
     const { overlayDrafts } = options.processingOptions;
     if (projectId && dataset && (config.projectId !== projectId || config.dataset !== dataset)) {
@@ -64,10 +64,8 @@ async function handleV2Webhook(args, options) {
         reporter.info(`Refreshed 1 document`);
         return true;
     }
-    if (operation === 'delete' &&
-        // Only delete nodes of published documents when overlayDrafts === false
-        (!documentId.startsWith('drafts.') || overlayDrafts)) {
-        handleDeletedDocuments(args, [documentId]);
+    if (operation === 'delete') {
+        handleDeletedDocuments(args, [publishedDocumentId]);
         reporter.info(`Deleted 1 document`);
         return true;
     }
