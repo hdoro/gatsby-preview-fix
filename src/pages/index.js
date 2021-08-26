@@ -2,33 +2,9 @@ import * as React from "react"
 import { graphql } from "gatsby"
 
 export const query = graphql`
-  fragment SanityImage on SanityMainImage {
-    crop {
-      _key
-      _type
-      top
-      bottom
-      left
-      right
-    }
-    hotspot {
-      _key
-      _type
-      x
-      y
-      height
-      width
-    }
-    asset {
-      _id
-    }
-  }
-
   query IndexPageQuery {
     site: sanitySiteSettings(_id: { regex: "/(drafts.|)siteSettings/" }) {
       title
-      description
-      keywords
     }
     posts: allSanityPost(
       limit: 6
@@ -37,17 +13,7 @@ export const query = graphql`
     ) {
       edges {
         node {
-          id
-          publishedAt
-          mainImage {
-            ...SanityImage
-            alt
-          }
           title
-          _rawExcerpt
-          slug {
-            current
-          }
         }
       }
     }

@@ -50,7 +50,7 @@ async function handleV2Webhook(args, options) {
         // Don't create node if a draft document w/ overlayDrafts === false
         (!document._id.startsWith('drafts.') || overlayDrafts)) {
         handleChangedDocuments(args, [document], options.processingOptions, 'created');
-        reporter.verbose(`Created 1 document`);
+        reporter.info(`Created 1 document`);
         console.log(`Created 1 document`);
         return true;
     }
@@ -58,13 +58,13 @@ async function handleV2Webhook(args, options) {
         (document === null || document === void 0 ? void 0 : document._id) &&
         (!document._id.startsWith('drafts.') || overlayDrafts)) {
         handleChangedDocuments(args, [document], options.processingOptions, 'updated');
-        reporter.verbose(`Refreshed 1 document`);
+        reporter.info(`Refreshed 1 document`);
         console.log(`Refreshed 1 document`);
         return true;
     }
     if (operation === 'delete') {
         handleDeletedDocuments(args, [publishedDocumentId]);
-        reporter.verbose(`Deleted 1 document`);
+        reporter.info(`Deleted 1 document`);
         console.log(`Deleted 1 document`);
         return true;
     }
@@ -74,11 +74,11 @@ async function handleWebhookEvent(args, options) {
     const { webhookBody, reporter } = args;
     const validated = validateWebhookPayload(webhookBody);
     if (validated === false) {
-        reporter.verbose('Invalid/non-sanity webhook payload received');
+        reporter.info('Invalid/non-sanity webhook payload received');
         console.log('Invalid/non-sanity webhook payload received');
         return false;
     }
-    reporter.verbose('[sanity] Processing changed documents from webhook');
+    reporter.info('[sanity] Processing changed documents from webhook');
     if (validated === 'v1') {
         return await handleV1Webhook(args, options);
     }
@@ -95,7 +95,7 @@ function handleDeletedDocuments(context, ids) {
         .map((documentId) => getNode(documentIds_1.safeId(documentIds_1.unprefixId(documentId), createNodeId)))
         .filter((node) => typeof node !== 'undefined')
         .reduce((count, node) => {
-        reporter.verbose(`Deleted document with ID ${node._id}`);
+        reporter.info(`Deleted document with ID ${node._id}`);
         console.log(`Deleted document with ID ${node._id}`);
         deleteNode(node);
         return count + 1;
@@ -107,10 +107,10 @@ function handleChangedDocuments(args, changedDocs, processingOptions, action) {
     return changedDocs.reduce((count, doc) => {
         const type = normalize_1.getTypeName(doc._type);
         if (!typeMap.objects[type]) {
-            reporter.verbose(`[sanity] Document "${doc._id}" has type ${doc._type} (${type}), which is not declared in the GraphQL schema. Make sure you run "graphql deploy". Skipping document.`);
+            reporter.info(`[sanity] Document "${doc._id}" has type ${doc._type} (${type}), which is not declared in the GraphQL schema. Make sure you run "graphql deploy". Skipping document.`);
             return count;
         }
-        reporter.verbose(`${action === 'created' ? 'Created' : 'Updated'} document with ID ${doc._id}`);
+        reporter.info(`${action === 'created' ? 'Created' : 'Updated'} document with ID ${doc._id}`);
         processingOptions.createNode(normalize_1.toGatsbyNode(doc, processingOptions));
         return count + 1;
     }, 0);
