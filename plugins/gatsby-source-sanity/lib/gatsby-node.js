@@ -113,6 +113,8 @@ const sourceNodes = async (args, pluginConfig) => {
         createParentChildLink,
         overlayDrafts,
     };
+    reporter.info(JSON.stringify(args))
+    reporter.info(JSON.stringify(webhookBody || { fake: true }))
     if (webhookBody &&
         Object.keys(webhookBody).length > 0 &&
         (await handleWebhookEvent_1.handleWebhookEvent(args, { client, processingOptions }))) {
