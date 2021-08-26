@@ -13,6 +13,7 @@ export const query = graphql`
     ) {
       edges {
         node {
+          id
           title
         }
       }
@@ -27,7 +28,7 @@ const IndexPage = ({ data: { site, posts } }) => {
       <h1>{site.title}</h1>
       <div>
         {posts.edges.map(({ node }) => (
-          <div key={node.title}>
+          <div key={node.id}>
             <h2>{node.title}</h2>
           </div>
         ))}

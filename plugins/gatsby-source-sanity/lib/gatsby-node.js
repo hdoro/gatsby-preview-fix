@@ -121,7 +121,7 @@ const sourceNodes = async (args, pluginConfig) => {
         // still attempt to refresh our data
         return;
     }
-    reporter.info('[sanity] Fetching export stream for dataset');
+    reporter.info('[TESTING sanity] Fetching export stream for dataset');
     const documents = await downloadDocuments(url, config.token, { includeDrafts: overlayDrafts });
     const gatsbyNodes = new Map();
     // sync a single document from the local cache of known documents with gatsby
