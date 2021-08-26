@@ -1,10 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateWebhookPayload = exports.handleWebhookEvent = void 0;
-const debug_1 = __importDefault(require("../debug"));
 const normalize_1 = require("./normalize");
 const documentIds_1 = require("./documentIds");
 async function handleV1Webhook(args, options) {
@@ -54,19 +50,22 @@ async function handleV2Webhook(args, options) {
         // Don't create node if a draft document w/ overlayDrafts === false
         (!document._id.startsWith('drafts.') || overlayDrafts)) {
         handleChangedDocuments(args, [document], options.processingOptions, 'created');
-        reporter.info(`Created 1 document`);
+        reporter.verbose(`Created 1 document`);
+        console.log(`Created 1 document`);
         return true;
     }
     if (operation === 'update' &&
         (document === null || document === void 0 ? void 0 : document._id) &&
         (!document._id.startsWith('drafts.') || overlayDrafts)) {
         handleChangedDocuments(args, [document], options.processingOptions, 'updated');
-        reporter.info(`Refreshed 1 document`);
+        reporter.verbose(`Refreshed 1 document`);
+        console.log(`Refreshed 1 document`);
         return true;
     }
     if (operation === 'delete') {
         handleDeletedDocuments(args, [publishedDocumentId]);
-        reporter.info(`Deleted 1 document`);
+        reporter.verbose(`Deleted 1 document`);
+        console.log(`Deleted 1 document`);
         return true;
     }
     return false;
@@ -75,10 +74,11 @@ async function handleWebhookEvent(args, options) {
     const { webhookBody, reporter } = args;
     const validated = validateWebhookPayload(webhookBody);
     if (validated === false) {
-        debug_1.default('Invalid/non-sanity webhook payload received');
+        reporter.verbose('Invalid/non-sanity webhook payload received');
+        console.log('Invalid/non-sanity webhook payload received');
         return false;
     }
-    reporter.info('[sanity] Processing changed documents from webhook');
+    reporter.verbose('[sanity] Processing changed documents from webhook');
     if (validated === 'v1') {
         return await handleV1Webhook(args, options);
     }
@@ -89,13 +89,14 @@ async function handleWebhookEvent(args, options) {
 }
 exports.handleWebhookEvent = handleWebhookEvent;
 function handleDeletedDocuments(context, ids) {
-    const { actions, createNodeId, getNode } = context;
+    const { actions, createNodeId, getNode, reporter } = context;
     const { deleteNode } = actions;
     return ids
         .map((documentId) => getNode(documentIds_1.safeId(documentIds_1.unprefixId(documentId), createNodeId)))
         .filter((node) => typeof node !== 'undefined')
         .reduce((count, node) => {
-        debug_1.default('Deleted document with ID %s', node._id);
+        reporter.verbose(`Deleted document with ID ${node._id}`);
+        console.log(`Deleted document with ID ${node._id}`);
         deleteNode(node);
         return count + 1;
     }, 0);
@@ -106,10 +107,10 @@ function handleChangedDocuments(args, changedDocs, processingOptions, action) {
     return changedDocs.reduce((count, doc) => {
         const type = normalize_1.getTypeName(doc._type);
         if (!typeMap.objects[type]) {
-            reporter.warn(`[sanity] Document "${doc._id}" has type ${doc._type} (${type}), which is not declared in the GraphQL schema. Make sure you run "graphql deploy". Skipping document.`);
+            reporter.verbose(`[sanity] Document "${doc._id}" has type ${doc._type} (${type}), which is not declared in the GraphQL schema. Make sure you run "graphql deploy". Skipping document.`);
             return count;
         }
-        debug_1.default('%s document with ID %s', action === 'created' ? 'Created' : 'Updated', doc._id);
+        reporter.verbose(`${action === 'created' ? 'Created' : 'Updated'} document with ID ${doc._id}`);
         processingOptions.createNode(normalize_1.toGatsbyNode(doc, processingOptions));
         return count + 1;
     }, 0);
