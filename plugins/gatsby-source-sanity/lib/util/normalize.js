@@ -16,7 +16,7 @@ function toGatsbyNode(doc, options) {
     const rawAliases = getRawAliases(doc, options);
     const safe = prefixConflictingKeys(doc);
     const withRefs = rewriteNodeReferences(safe, options);
-    return Object.assign(Object.assign(Object.assign({}, withRefs), rawAliases), { id: documentIds_1.safeId(overlayDrafts ? documentIds_1.unprefixId(doc._id) : doc._id, createNodeId), children: [], internal: {
+    return Object.assign(Object.assign(Object.assign({}, withRefs), rawAliases), { id: (0, documentIds_1.safeId)(overlayDrafts ? (0, documentIds_1.unprefixId)(doc._id) : doc._id, createNodeId), children: [], internal: {
             type: getTypeName(doc._type),
             contentDigest: createContentDigest(JSON.stringify(withRefs)),
         } });
@@ -29,7 +29,7 @@ function getTypeName(type) {
     if (!type) {
         return type;
     }
-    const typeName = lodash_1.startCase(type);
+    const typeName = (0, lodash_1.startCase)(type);
     if (scalarTypeNames.includes(typeName)) {
         return typeName;
     }
@@ -48,7 +48,7 @@ function prefixConflictingKeys(obj) {
 }
 function getConflictFreeFieldName(fieldName) {
     return exports.RESTRICTED_NODE_FIELDS.includes(fieldName)
-        ? `${lodash_1.camelCase(typePrefix)}${lodash_1.upperFirst(fieldName)}`
+        ? `${(0, lodash_1.camelCase)(typePrefix)}${(0, lodash_1.upperFirst)(fieldName)}`
         : fieldName;
 }
 exports.getConflictFreeFieldName = getConflictFreeFieldName;
@@ -64,14 +64,14 @@ function getRawAliases(doc, options) {
         const field = type.fields[fieldName];
         const namedType = field.namedType.name.value;
         if (field.aliasFor) {
-            const aliasName = '_' + lodash_1.camelCase(`raw_data_${field.aliasFor}`);
+            const aliasName = '_' + (0, lodash_1.camelCase)(`raw_data_${field.aliasFor}`);
             acc[aliasName] = doc[field.aliasFor];
             return acc;
         }
         if (typeMap.scalars.includes(namedType)) {
             return acc;
         }
-        const aliasName = '_' + lodash_1.camelCase(`raw_data_${fieldName}`);
+        const aliasName = '_' + (0, lodash_1.camelCase)(`raw_data_${fieldName}`);
         acc[aliasName] = doc[fieldName];
         return acc;
     }, initial);
@@ -79,13 +79,13 @@ function getRawAliases(doc, options) {
 // Tranform Sanity refs ({_ref: 'foo'}) to Gatsby refs ({_ref: 'someOtherId'})
 function rewriteNodeReferences(doc, options) {
     const { createNodeId } = options;
-    const refs = mutator_1.extractWithPath('..[_ref]', doc);
+    const refs = (0, mutator_1.extractWithPath)('..[_ref]', doc);
     if (refs.length === 0) {
         return doc;
     }
-    const newDoc = lodash_1.cloneDeep(doc);
+    const newDoc = (0, lodash_1.cloneDeep)(doc);
     refs.forEach((match) => {
-        lodash_1.set(newDoc, match.path, documentIds_1.safeId(match.value, createNodeId));
+        (0, lodash_1.set)(newDoc, match.path, (0, documentIds_1.safeId)(match.value, createNodeId));
     });
     return newDoc;
 }

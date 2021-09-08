@@ -20,28 +20,33 @@ const getAllDocuments_1 = require("./util/getAllDocuments");
 const oneline_1 = __importDefault(require("oneline"));
 const lodash_1 = require("lodash");
 const debug_1 = __importDefault(require("./debug"));
+let coreSupportsOnPluginInit;
+try {
+    const { isGatsbyNodeLifecycleSupported } = require(`gatsby-plugin-utils`);
+    if (isGatsbyNodeLifecycleSupported(`onPluginInit`)) {
+        coreSupportsOnPluginInit = 'stable';
+    }
+    else if (isGatsbyNodeLifecycleSupported(`unstable_onPluginInit`)) {
+        coreSupportsOnPluginInit = 'unstable';
+    }
+}
+catch (e) {
+    console.error(`Could not check if Gatsby supports onPluginInit lifecycle`);
+}
 const defaultConfig = {
     version: '1',
     overlayDrafts: false,
     graphqlTag: 'default',
 };
 const stateCache = {};
-const onPreInit = async ({ reporter }) => {
-    // Old versions of Gatsby does not have this method
-    if (reporter.setErrorMap) {
-        reporter.setErrorMap(errors_1.ERROR_MAP);
-    }
-};
-exports.onPreInit = onPreInit;
-const onPreBootstrap = async (args, pluginOptions) => {
+const initializePlugin = async ({ reporter }, pluginOptions) => {
     const config = Object.assign(Object.assign({}, defaultConfig), pluginOptions);
-    const { reporter } = args;
     if (Number(package_json_1.default.version.split('.')[0]) < 3) {
-        const unsupportedVersionMessage = oneline_1.default `
+        const unsupportedVersionMessage = (0, oneline_1.default) `
     You are using a version of Gatsby not supported by gatsby-source-sanity.
     Upgrade gatsby to >= 3.0.0 to continue.`;
         reporter.panic({
-            id: errors_1.prefixId(errors_1.ERROR_CODES.UnsupportedGatsbyVersion),
+            id: (0, errors_1.prefixId)(errors_1.ERROR_CODES.UnsupportedGatsbyVersion),
             context: { sourceMessage: unsupportedVersionMessage },
         });
         return;
@@ -53,14 +58,14 @@ const onPreBootstrap = async (args, pluginOptions) => {
     try {
         reporter.info('[sanity] Fetching remote GraphQL schema');
         const client = getClient(config);
-        const api = await remoteGraphQLSchema_1.getRemoteGraphQLSchema(client, config);
+        const api = await (0, remoteGraphQLSchema_1.getRemoteGraphQLSchema)(client, config);
         reporter.info('[sanity] Transforming to Gatsby-compatible GraphQL SDL');
-        const graphqlSdl = await rewriteGraphQLSchema_1.rewriteGraphQLSchema(api, { config, reporter });
-        const graphqlSdlKey = cache_1.getCacheKey(config, cache_1.CACHE_KEYS.GRAPHQL_SDL);
+        const graphqlSdl = await (0, rewriteGraphQLSchema_1.rewriteGraphQLSchema)(api, { config, reporter });
+        const graphqlSdlKey = (0, cache_1.getCacheKey)(config, cache_1.CACHE_KEYS.GRAPHQL_SDL);
         stateCache[graphqlSdlKey] = graphqlSdl;
         reporter.info('[sanity] Stitching GraphQL schemas from SDL');
-        const typeMap = remoteGraphQLSchema_1.getTypeMapFromGraphQLSchema(api);
-        const typeMapKey = cache_1.getCacheKey(config, cache_1.CACHE_KEYS.TYPE_MAP);
+        const typeMap = (0, remoteGraphQLSchema_1.getTypeMapFromGraphQLSchema)(api);
+        const typeMapKey = (0, cache_1.getCacheKey)(config, cache_1.CACHE_KEYS.TYPE_MAP);
         stateCache[typeMapKey] = typeMap;
     }
     catch (err) {
@@ -70,27 +75,53 @@ const onPreBootstrap = async (args, pluginOptions) => {
         }
         if (typeof err.code === 'string' && errors_1.SANITY_ERROR_CODE_MAP[err.code]) {
             reporter.panic({
-                id: documentIds_1.prefixId(errors_1.SANITY_ERROR_CODE_MAP[err.code]),
+                id: (0, documentIds_1.prefixId)(errors_1.SANITY_ERROR_CODE_MAP[err.code]),
                 context: { sourceMessage: `[sanity] ${errors_1.SANITY_ERROR_CODE_MESSAGES[err.code]}` },
             });
         }
         const prefix = typeof err.code === 'string' ? `[${err.code}] ` : '';
         reporter.panic({
-            id: documentIds_1.prefixId(errors_1.ERROR_CODES.SchemaFetchError),
+            id: (0, documentIds_1.prefixId)(errors_1.ERROR_CODES.SchemaFetchError),
             context: { sourceMessage: `${prefix}${err.message}` },
         });
     }
 };
+const onPreInit = async ({ reporter }) => {
+    // onPluginInit replaces onPreInit in Gatsby V4
+    // Old versions of Gatsby does not have the method setErrorMap
+    if (!coreSupportsOnPluginInit && reporter.setErrorMap) {
+        reporter.setErrorMap(errors_1.ERROR_MAP);
+    }
+};
+exports.onPreInit = onPreInit;
+const onPreBootstrap = async (args, pluginOptions) => {
+    // Because we are setting global state here, this code now needs to run in onPluginInit if using Gatsby V4
+    if (!coreSupportsOnPluginInit) {
+        await initializePlugin(args, pluginOptions);
+    }
+};
 exports.onPreBootstrap = onPreBootstrap;
+const onPluginInit = async (args, pluginOptions) => {
+    args.reporter.setErrorMap(errors_1.ERROR_MAP);
+    await initializePlugin(args, pluginOptions);
+};
+if (coreSupportsOnPluginInit === 'stable') {
+    // to properly initialize plugin in worker (`onPreBootstrap` won't run in workers)
+    // need to conditionally export otherwise it throw an error for older versions
+    exports.onPluginInit = onPluginInit;
+}
+else if (coreSupportsOnPluginInit === 'unstable') {
+    exports.unstable_onPluginInit = onPluginInit;
+}
 const createResolvers = (args, pluginOptions) => {
-    const typeMapKey = cache_1.getCacheKey(pluginOptions, cache_1.CACHE_KEYS.TYPE_MAP);
+    const typeMapKey = (0, cache_1.getCacheKey)(pluginOptions, cache_1.CACHE_KEYS.TYPE_MAP);
     const typeMap = (stateCache[typeMapKey] || remoteGraphQLSchema_1.defaultTypeMap);
-    args.createResolvers(getGraphQLResolverMap_1.getGraphQLResolverMap(typeMap, pluginOptions, args));
+    args.createResolvers((0, getGraphQLResolverMap_1.getGraphQLResolverMap)(typeMap, pluginOptions, args));
 };
 exports.createResolvers = createResolvers;
 const createSchemaCustomization = ({ actions }, pluginConfig) => {
     const { createTypes } = actions;
-    const graphqlSdlKey = cache_1.getCacheKey(pluginConfig, cache_1.CACHE_KEYS.GRAPHQL_SDL);
+    const graphqlSdlKey = (0, cache_1.getCacheKey)(pluginConfig, cache_1.CACHE_KEYS.GRAPHQL_SDL);
     const graphqlSdl = stateCache[graphqlSdlKey];
     createTypes(graphqlSdl);
 };
@@ -100,7 +131,7 @@ const sourceNodes = async (args, pluginConfig) => {
     const { dataset, overlayDrafts, watchMode } = config;
     const { actions, createNodeId, createContentDigest, reporter, webhookBody } = args;
     const { createNode, deleteNode, createParentChildLink } = actions;
-    const typeMapKey = cache_1.getCacheKey(pluginConfig, cache_1.CACHE_KEYS.TYPE_MAP);
+    const typeMapKey = (0, cache_1.getCacheKey)(pluginConfig, cache_1.CACHE_KEYS.TYPE_MAP);
     const typeMap = (stateCache[typeMapKey] || remoteGraphQLSchema_1.defaultTypeMap);
     const client = getClient(config);
     const url = client.getUrl(`/data/export/${dataset}?tag=sanity.gatsby.source-nodes`);
@@ -113,28 +144,26 @@ const sourceNodes = async (args, pluginConfig) => {
         createParentChildLink,
         overlayDrafts,
     };
-    reporter.info(JSON.stringify(args))
-    reporter.info(JSON.stringify(webhookBody || { fake: true }))
     if (webhookBody &&
-        Object.keys(webhookBody).length > 0 &&
-        (await handleWebhookEvent_1.handleWebhookEvent(args, { client, processingOptions }))) {
+        webhookBody.ids &&
+        (await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions }))) {
         // If the payload was handled by the webhook handler, fall back.
         // Otherwise, this may not be a Sanity webhook, but we should
         // still attempt to refresh our data
         return;
     }
-    reporter.info('[TESTING sanity] Fetching export stream for dataset');
+    reporter.info('[sanity] Fetching export stream for dataset');
     const documents = await downloadDocuments(url, config.token, { includeDrafts: overlayDrafts });
     const gatsbyNodes = new Map();
     // sync a single document from the local cache of known documents with gatsby
     function syncWithGatsby(id) {
-        const publishedId = documentIds_1.unprefixId(id);
-        const draftId = documentIds_1.prefixId(id);
+        const publishedId = (0, documentIds_1.unprefixId)(id);
+        const draftId = (0, documentIds_1.prefixId)(id);
         const published = documents.get(publishedId);
         const draft = documents.get(draftId);
         const doc = draft || published;
         if (doc) {
-            const type = normalize_1.getTypeName(doc._type);
+            const type = (0, normalize_1.getTypeName)(doc._type);
             if (!typeMap.objects[type]) {
                 reporter.warn(`[sanity] Document "${doc._id}" has type ${doc._type} (${type}), which is not declared in the GraphQL schema. Make sure you run "graphql deploy". Skipping document.`);
                 return;
@@ -142,34 +171,34 @@ const sourceNodes = async (args, pluginConfig) => {
         }
         if (id === draftId && !overlayDrafts) {
             // do nothing, we're not overlaying drafts
-            debug_1.default('overlayDrafts is not enabled, so skipping createNode for draft');
+            (0, debug_1.default)('overlayDrafts is not enabled, so skipping createNode for draft');
             return;
         }
         if (id === publishedId) {
             if (draft && overlayDrafts) {
                 // we have a draft, and overlayDrafts is enabled, so skip to the draft document instead
-                debug_1.default('skipping createNode of %s since there is a draft and overlayDrafts is enabled', publishedId);
+                (0, debug_1.default)('skipping createNode of %s since there is a draft and overlayDrafts is enabled', publishedId);
                 return;
             }
             if (gatsbyNodes.has(publishedId)) {
                 // sync existing gatsby node with document from updated cache
                 if (published) {
-                    debug_1.default('updating gatsby node for %s', publishedId);
-                    const node = normalize_1.toGatsbyNode(published, processingOptions);
+                    (0, debug_1.default)('updating gatsby node for %s', publishedId);
+                    const node = (0, normalize_1.toGatsbyNode)(published, processingOptions);
                     gatsbyNodes.set(publishedId, node);
                     createNode(node);
                 }
                 else {
                     // the published document has been removed (note - we either have no draft or overlayDrafts is not enabled so merely removing is ok here)
-                    debug_1.default('deleting gatsby node for %s since there is no draft and overlayDrafts is not enabled', publishedId);
+                    (0, debug_1.default)('deleting gatsby node for %s since there is no draft and overlayDrafts is not enabled', publishedId);
                     deleteNode(gatsbyNodes.get(publishedId));
                     gatsbyNodes.delete(publishedId);
                 }
             }
             else if (published) {
                 // when we don't have a gatsby node for the published document
-                debug_1.default('creating gatsby node for %s', publishedId);
-                const node = normalize_1.toGatsbyNode(published, processingOptions);
+                (0, debug_1.default)('creating gatsby node for %s', publishedId);
+                const node = (0, normalize_1.toGatsbyNode)(published, processingOptions);
                 gatsbyNodes.set(publishedId, node);
                 createNode(node);
             }
@@ -178,14 +207,14 @@ const sourceNodes = async (args, pluginConfig) => {
             // we're syncing a draft version and overlayDrafts is enabled
             if (gatsbyNodes.has(publishedId) && !draft && !published) {
                 // have stale gatsby node for a published document that has neither a draft or a published (e.g. it's been deleted)
-                debug_1.default('deleting gatsby node for %s since there is neither a draft nor a published version of it any more', publishedId);
+                (0, debug_1.default)('deleting gatsby node for %s since there is neither a draft nor a published version of it any more', publishedId);
                 deleteNode(gatsbyNodes.get(publishedId));
                 gatsbyNodes.delete(publishedId);
                 return;
             }
-            debug_1.default('Replacing gatsby node for %s using the %s document', publishedId, draft ? 'draft' : 'published');
+            (0, debug_1.default)('Replacing gatsby node for %s using the %s document', publishedId, draft ? 'draft' : 'published');
             // pick the draft if we can, otherwise pick the published
-            const node = normalize_1.toGatsbyNode((draft || published), processingOptions);
+            const node = (0, normalize_1.toGatsbyNode)((draft || published), processingOptions);
             gatsbyNodes.set(publishedId, node);
             createNode(node);
         }
@@ -207,14 +236,14 @@ const sourceNodes = async (args, pluginConfig) => {
         reporter.info('[sanity] Watch mode enabled, starting a listener');
         client
             .listen('*[!(_id in path("_.**"))]')
-            .pipe(operators_1.filter((event) => overlayDrafts || !event.documentId.startsWith('drafts.')), operators_1.tap((event) => {
+            .pipe((0, operators_1.filter)((event) => overlayDrafts || !event.documentId.startsWith('drafts.')), (0, operators_1.tap)((event) => {
             if (event.result) {
                 documents.set(event.documentId, event.result);
             }
             else {
                 documents.delete(event.documentId);
             }
-        }), operators_1.map((event) => event.documentId), operators_1.bufferTime(100), operators_1.map((ids) => lodash_1.uniq(ids)), operators_1.filter((ids) => ids.length > 0), operators_1.tap((updateIds) => debug_1.default('The following documents updated and will be synced with gatsby: ', updateIds)), operators_1.tap((updatedIds) => syncIdsWithGatsby(updatedIds)))
+        }), (0, operators_1.map)((event) => event.documentId), (0, operators_1.bufferTime)(100), (0, operators_1.map)((ids) => (0, lodash_1.uniq)(ids)), (0, operators_1.filter)((ids) => ids.length > 0), (0, operators_1.tap)((updateIds) => (0, debug_1.default)('The following documents updated and will be synced with gatsby: ', updateIds)), (0, operators_1.tap)((updatedIds) => syncIdsWithGatsby(updatedIds)))
             .subscribe();
     }
     // do the initial sync from sanity documents to gatsby nodes
@@ -226,7 +255,7 @@ const setFieldsOnGraphQLNodeType = async (context, pluginConfig) => {
     const { type } = context;
     let fields = {};
     if (type.name === 'SanityImageAsset') {
-        fields = Object.assign(Object.assign({}, fields), extendImageNode_1.extendImageNode(pluginConfig));
+        fields = Object.assign(Object.assign({}, fields), (0, extendImageNode_1.extendImageNode)(pluginConfig));
     }
     return fields;
 };
@@ -234,13 +263,13 @@ exports.setFieldsOnGraphQLNodeType = setFieldsOnGraphQLNodeType;
 function validateConfig(config, reporter) {
     if (!config.projectId) {
         reporter.panic({
-            id: documentIds_1.prefixId(errors_1.ERROR_CODES.MissingProjectId),
+            id: (0, documentIds_1.prefixId)(errors_1.ERROR_CODES.MissingProjectId),
             context: { sourceMessage: '[sanity] `projectId` must be specified' },
         });
     }
     if (!config.dataset) {
         reporter.panic({
-            id: documentIds_1.prefixId(errors_1.ERROR_CODES.MissingDataset),
+            id: (0, documentIds_1.prefixId)(errors_1.ERROR_CODES.MissingDataset),
             context: { sourceMessage: '[sanity] `dataset` must be specified' },
         });
     }
@@ -254,7 +283,7 @@ function validateConfig(config, reporter) {
     return true;
 }
 function downloadDocuments(url, token, options = {}) {
-    return getAllDocuments_1.getAllDocuments(url, token, options).then((stream) => new Promise((resolve, reject) => {
+    return (0, getAllDocuments_1.getAllDocuments)(url, token, options).then((stream) => new Promise((resolve, reject) => {
         const documents = new Map();
         stream.on('data', (doc) => {
             documents.set(doc._id, doc);

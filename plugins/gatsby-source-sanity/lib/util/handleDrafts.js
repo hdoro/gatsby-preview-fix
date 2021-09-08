@@ -26,7 +26,7 @@ function filter(doc, enc, callback) {
     return isDraft(doc) ? callback() : callback(null, doc);
 }
 function isDraft(doc) {
-    return doc && doc._id && documentIds_1.isDraftId(doc._id);
+    return doc && doc._id && (0, documentIds_1.isDraftId)(doc._id);
 }
 const removeDrafts = () => through.obj(filter);
 exports.removeDrafts = removeDrafts;

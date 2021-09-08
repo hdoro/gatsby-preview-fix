@@ -11,7 +11,7 @@ function getDocumentStream(url, token) {
     const auth = token ? { Authorization: `Bearer ${token}` } : {};
     const userAgent = { 'User-Agent': `${index_1.pkgName}` };
     const headers = Object.assign(Object.assign({}, userAgent), auth);
-    return axios_1.default({
+    return (0, axios_1.default)({
         method: 'get',
         responseType: 'stream',
         url,
@@ -25,7 +25,7 @@ function getDocumentStream(url, token) {
         let error = err;
         try {
             // Try to lift error message out of JSON payload ({error, message, statusCode})
-            const data = await get_stream_1.default(err.response.data);
+            const data = await (0, get_stream_1.default)(err.response.data);
             error = new Error(JSON.parse(data).message);
         }
         catch (jsonErr) {

@@ -29,14 +29,14 @@ function resolveReferences(obj, context, options = {}, currentDepth = 0) {
         // not a Sanity document ID. Thus, it does not need to be rewritten
         obj._ref.startsWith('-')
             ? obj._ref
-            : documentIds_1.safeId(overlayDrafts ? documentIds_1.unprefixId(obj._ref) : obj._ref, createNodeId);
-        debug_1.default('Resolve %s (Sanity ID %s)', targetId, obj._ref);
+            : (0, documentIds_1.safeId)(overlayDrafts ? (0, documentIds_1.unprefixId)(obj._ref) : obj._ref, createNodeId);
+        (0, debug_1.default)('Resolve %s (Sanity ID %s)', targetId, obj._ref);
         const node = getNode(targetId);
         if (!node && obj._weak) {
             return null;
         }
         else if (!node) {
-            debug_1.default(`Could not resolve reference to ID "${targetId}"`);
+            (0, debug_1.default)(`Could not resolve reference to ID "${targetId}"`);
             return null;
         }
         return node && currentDepth <= maxDepth

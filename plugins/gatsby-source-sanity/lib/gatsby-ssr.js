@@ -4,7 +4,7 @@ exports.onRenderBody = void 0;
 const react_1 = require("react");
 const onRenderBody = ({ setHeadComponents, }) => {
     setHeadComponents([
-        react_1.createElement('link', {
+        (0, react_1.createElement)('link', {
             rel: 'preconnect',
             key: 'sanity-cdn-preconnect',
             href: 'https://cdn.sanity.io',

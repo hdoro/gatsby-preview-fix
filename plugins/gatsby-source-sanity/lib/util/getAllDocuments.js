@@ -31,7 +31,7 @@ const through = __importStar(require("through2"));
 const removeSystemDocuments_1 = require("./removeSystemDocuments");
 const pumpify_1 = __importDefault(require("pumpify"));
 async function getAllDocuments(url, token, options = {}) {
-    return pumpify_1.default.obj(await getDocumentStream_1.getDocumentStream(url, token), split2_1.default(JSON.parse), options.includeDrafts ? through.obj() : handleDrafts_1.removeDrafts(), removeSystemDocuments_1.removeSystemDocuments(), rejectOnApiError_1.rejectOnApiError());
+    return pumpify_1.default.obj(await (0, getDocumentStream_1.getDocumentStream)(url, token), (0, split2_1.default)(JSON.parse), options.includeDrafts ? through.obj() : (0, handleDrafts_1.removeDrafts)(), (0, removeSystemDocuments_1.removeSystemDocuments)(), (0, rejectOnApiError_1.rejectOnApiError)());
 }
 exports.getAllDocuments = getAllDocuments;
 //# sourceMappingURL=getAllDocuments.js.map

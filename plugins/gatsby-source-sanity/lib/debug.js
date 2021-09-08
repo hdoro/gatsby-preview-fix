@@ -4,5 +4,5 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const debug_1 = __importDefault(require("debug"));
-exports.default = debug_1.default('sanity');
+exports.default = (0, debug_1.default)('sanity');
 //# sourceMappingURL=debug.js.map

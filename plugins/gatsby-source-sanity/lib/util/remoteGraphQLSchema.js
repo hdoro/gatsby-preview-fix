@@ -21,9 +21,9 @@ async function getRemoteGraphQLSchema(client, config) {
         return api;
     }
     catch (err) {
-        const statusCode = lodash_1.get(err, 'response.statusCode');
-        const errorCode = lodash_1.get(err, 'response.body.errorCode');
-        const message = lodash_1.get(err, 'response.body.message') || lodash_1.get(err, 'response.statusMessage') || err.message;
+        const statusCode = (0, lodash_1.get)(err, 'response.statusCode');
+        const errorCode = (0, lodash_1.get)(err, 'response.body.errorCode');
+        const message = (0, lodash_1.get)(err, 'response.body.message') || (0, lodash_1.get)(err, 'response.statusMessage') || err.message;
         const is404 = statusCode === 404 || /schema not found/i.test(message);
         const error = new errors_1.ErrorWithCode(is404
             ? `GraphQL API not deployed - see https://github.com/sanity-io/gatsby-source-sanity#graphql-api for more info\n\n`
@@ -34,8 +34,8 @@ async function getRemoteGraphQLSchema(client, config) {
 exports.getRemoteGraphQLSchema = getRemoteGraphQLSchema;
 function getTypeMapFromGraphQLSchema(sdl) {
     const typeMap = { objects: {}, scalars: [], unions: {} };
-    const remoteSchema = graphql_1.parse(sdl);
-    const groups = Object.assign({ ObjectTypeDefinition: [], ScalarTypeDefinition: [], UnionTypeDefinition: [] }, lodash_1.groupBy(remoteSchema.definitions, 'kind'));
+    const remoteSchema = (0, graphql_1.parse)(sdl);
+    const groups = Object.assign({ ObjectTypeDefinition: [], ScalarTypeDefinition: [], UnionTypeDefinition: [] }, (0, lodash_1.groupBy)(remoteSchema.definitions, 'kind'));
     typeMap.scalars = graphql_1.specifiedScalarTypes
         .map((scalar) => scalar.name)
         .concat(groups.ScalarTypeDefinition.map((typeDef) => typeDef.name.value));
@@ -44,7 +44,7 @@ function getTypeMapFromGraphQLSchema(sdl) {
         if (typeDef.name.value === 'RootQuery') {
             return acc;
         }
-        const name = normalize_1.getTypeName(typeDef.name.value);
+        const name = (0, normalize_1.getTypeName)(typeDef.name.value);
         acc[name] = {
             name,
             kind: 'Object',
@@ -59,7 +59,7 @@ function getTypeMapFromGraphQLSchema(sdl) {
                         aliasFor: null,
                         isReference: false,
                     };
-                    const aliasName = '_' + lodash_1.camelCase(`raw ${aliasFor}`);
+                    const aliasName = '_' + (0, lodash_1.camelCase)(`raw ${aliasFor}`);
                     fields[aliasName] = {
                         type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
                         namedType: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
@@ -79,7 +79,7 @@ function getTypeMapFromGraphQLSchema(sdl) {
                 };
                 // Add raw alias if not scalar
                 if (!typeMap.scalars.includes(namedType.name.value)) {
-                    const aliasName = '_' + lodash_1.camelCase(`raw ${fieldDef.name.value}`);
+                    const aliasName = '_' + (0, lodash_1.camelCase)(`raw ${fieldDef.name.value}`);
                     fields[aliasName] = {
                         type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
                         namedType: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
@@ -95,10 +95,10 @@ function getTypeMapFromGraphQLSchema(sdl) {
     }, objects);
     const unions = {};
     typeMap.unions = groups.UnionTypeDefinition.reduce((acc, typeDef) => {
-        const name = normalize_1.getTypeName(typeDef.name.value);
+        const name = (0, normalize_1.getTypeName)(typeDef.name.value);
         acc[name] = {
             name,
-            types: (typeDef.types || []).map((type) => normalize_1.getTypeName(type.name.value)),
+            types: (typeDef.types || []).map((type) => (0, normalize_1.getTypeName)(type.name.value)),
         };
         return acc;
     }, unions);
@@ -134,7 +134,7 @@ function getAliasDirective(field) {
     if (!forArg) {
         return null;
     }
-    return graphql_1.valueFromAST(forArg.value, graphql_1.GraphQLString, {});
+    return (0, graphql_1.valueFromAST)(forArg.value, graphql_1.GraphQLString, {});
 }
 function getReferenceDirective(field) {
     return (field.directives || []).find((dir) => dir.name.value === 'reference');

@@ -7,9 +7,9 @@ const normalize_1 = require("./normalize");
 const builtins = ['ID', 'String', 'Boolean', 'Int', 'Float', 'JSON', 'DateTime', 'Date'];
 const wantedNodeTypes = ['ObjectTypeDefinition', 'UnionTypeDefinition', 'InterfaceTypeDefinition'];
 const rewriteGraphQLSchema = (schemaSdl, context) => {
-    const ast = graphql_1.parse(schemaSdl);
+    const ast = (0, graphql_1.parse)(schemaSdl);
     const transformedAst = transformAst(ast, context);
-    const transformed = graphql_1.print(transformedAst);
+    const transformed = (0, graphql_1.print)(transformedAst);
     return transformed;
 };
 exports.rewriteGraphQLSchema = rewriteGraphQLSchema;
@@ -67,7 +67,7 @@ function getRawFields(fields, scalars) {
         const name = jsonAlias || field.name.value;
         acc.push({
             kind: field.kind,
-            name: { kind: 'Name', value: '_' + lodash_1.camelCase(`raw ${name}`) },
+            name: { kind: 'Name', value: '_' + (0, lodash_1.camelCase)(`raw ${name}`) },
             type: { kind: 'NamedType', name: { kind: 'Name', value: 'JSON' } },
             arguments: [
                 {
@@ -109,7 +109,7 @@ function getJsonAliasTarget(field) {
     if (!forArg) {
         return null;
     }
-    return graphql_1.valueFromAST(forArg.value, graphql_1.GraphQLString, {});
+    return (0, graphql_1.valueFromAST)(forArg.value, graphql_1.GraphQLString, {});
 }
 function isJsonAlias(field) {
     return getJsonAliasTarget(field) !== null;
@@ -183,7 +183,7 @@ function maybeRewriteFieldName(field, parent, context) {
         return field.name;
     }
     const parentTypeName = parent.name.value;
-    const newFieldName = normalize_1.getConflictFreeFieldName(field.name.value);
+    const newFieldName = (0, normalize_1.getConflictFreeFieldName)(field.name.value);
     context.reporter.warn(`[sanity] Type \`${parentTypeName}\` has field with name \`${field.name.value}\`, which conflicts with Gatsby's internal properties. Renaming to \`${newFieldName}\``);
     return Object.assign(Object.assign({}, field.name), { value: newFieldName });
 }

@@ -27,7 +27,7 @@ const ImagePlaceholderType = new graphql_1.GraphQLEnumType({
 });
 const extensions = new Map();
 function extendImageNode(config) {
-    const key = cache_1.getCacheKey(config, cache_1.CACHE_KEYS.IMAGE_EXTENSIONS);
+    const key = (0, cache_1.getCacheKey)(config, cache_1.CACHE_KEYS.IMAGE_EXTENSIONS);
     if (extensions.has(key)) {
         return extensions.get(key);
     }
@@ -39,7 +39,7 @@ exports.extendImageNode = extendImageNode;
 function getExtension(config) {
     const location = { projectId: config.projectId, dataset: config.dataset };
     return {
-        gatsbyImageData: graphql_utils_1.getGatsbyImageFieldConfig((image, args) => getGatsbyImageProps_1.getGatsbyImageData(image, args, location), {
+        gatsbyImageData: (0, graphql_utils_1.getGatsbyImageFieldConfig)((image, args) => (0, getGatsbyImageProps_1.getGatsbyImageData)(image, args, location), {
             placeholder: {
                 type: ImagePlaceholderType,
                 defaultValue: `dominantColor`,

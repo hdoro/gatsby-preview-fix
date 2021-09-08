@@ -102,8 +102,8 @@ function getGatsbyImageData(image, _a, loc) {
         return null;
     }
     const { width, height } = imageStub.metadata.dimensions;
-    const builder = image_url_1.default(loc).image(image);
-    const imageProps = gatsby_plugin_image_1.generateImageData(Object.assign(Object.assign({}, args), { pluginName: `gatsby-source-sanity`, sourceMetadata: {
+    const builder = (0, image_url_1.default)(loc).image(image);
+    const imageProps = (0, gatsby_plugin_image_1.generateImageData)(Object.assign(Object.assign({}, args), { pluginName: `gatsby-source-sanity`, sourceMetadata: {
             format: 'auto',
             width,
             height,
