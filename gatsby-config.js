@@ -6,10 +6,9 @@ require("dotenv").config({
 const clientConfig = require("./client-config")
 
 const isProd = process.env.NODE_ENV === "production"
-const gatsbyCloudPreview = process.env.SANITY_GATSBY_CLOUD_PREVIEW
-const previewEnabled = gatsbyCloudPreview
-  ? gatsbyCloudPreview.toLowerCase() === "true"
-  : false
+const previewEnabled = (process.env.GATSBY_IS_PREVIEW || "false").toLowerCase() === "true"
+
+console.log({previewEnabled})
 
 module.exports = {
   siteMetadata: {

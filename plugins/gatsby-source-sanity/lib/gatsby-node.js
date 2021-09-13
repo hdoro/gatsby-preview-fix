@@ -145,7 +145,7 @@ const sourceNodes = async (args, pluginConfig) => {
         overlayDrafts,
     };
     if (webhookBody &&
-        webhookBody.ids &&
+        Object.keys(webhookBody).length > 0 &&
         (await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions }))) {
         // If the payload was handled by the webhook handler, fall back.
         // Otherwise, this may not be a Sanity webhook, but we should
