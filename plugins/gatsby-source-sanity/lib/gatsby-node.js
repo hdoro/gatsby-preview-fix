@@ -144,6 +144,7 @@ const sourceNodes = async (args, pluginConfig) => {
         createParentChildLink,
         overlayDrafts,
     };
+    console.log("Hook body", webhookBody);
     if (webhookBody &&
         Object.keys(webhookBody).length > 0 &&
         (await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions }))) {
