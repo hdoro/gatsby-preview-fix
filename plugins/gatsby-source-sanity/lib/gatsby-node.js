@@ -144,13 +144,17 @@ const sourceNodes = async (args, pluginConfig) => {
         createParentChildLink,
         overlayDrafts,
     };
-    console.log("Hook body", webhookBody);
-    if (webhookBody &&
-        Object.keys(webhookBody).length > 0 &&
-        (await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions }))) {
-        // If the payload was handled by the webhook handler, fall back.
-        // Otherwise, this may not be a Sanity webhook, but we should
-        // still attempt to refresh our data
+    reporter.info(JSON.stringify(webhookBody, null, 2))
+    // webhookBody is always present, even when sourceNodes is called in Gatsby's initialization.
+    // As such, we need to check if it has any key to work with it.
+    if (webhookBody && Object.keys(webhookBody).length > 0) {
+        const webhookHandled = await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions });
+        // Even if the webhook body is invalid, let's avoid re-fetching all documents.
+        // Otherwise, we'd be overloading Gatsby's preview servers on large datasets.
+        if (!webhookHandled) {
+            reporter.warn('[sanity] Received webhook is invalid. Make sure your Sanity webhook is configured correctly.');
+            reporter.info(`[sanity] Webhook data: ${JSON.stringify(webhookBody, null, 2)}`);
+        }
         return;
     }
     reporter.info('[sanity] Fetching export stream for dataset');
