@@ -20,6 +20,8 @@ const getAllDocuments_1 = require("./util/getAllDocuments");
 const oneline_1 = __importDefault(require("oneline"));
 const lodash_1 = require("lodash");
 const debug_1 = __importDefault(require("./debug"));
+const handleDeltaChanges_1 = __importDefault(require("./util/handleDeltaChanges"));
+const getPluginStatus_1 = require("./util/getPluginStatus");
 let coreSupportsOnPluginInit;
 try {
     const { isGatsbyNodeLifecycleSupported } = require(`gatsby-plugin-utils`);
@@ -144,8 +146,9 @@ const sourceNodes = async (args, pluginConfig) => {
         createParentChildLink,
         overlayDrafts,
     };
-    reporter.info(JSON.stringify(webhookBody, null, 2))
-    // webhookBody is always present, even when sourceNodes is called in Gatsby's initialization.
+    // PREVIEW UPDATES THROUGH WEBHOOKS
+    // =======
+    // `webhookBody` is always present, even when sourceNodes is called in Gatsby's initialization.
     // As such, we need to check if it has any key to work with it.
     if (webhookBody && Object.keys(webhookBody).length > 0) {
         const webhookHandled = await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions });
@@ -156,6 +159,25 @@ const sourceNodes = async (args, pluginConfig) => {
             reporter.info(`[sanity] Webhook data: ${JSON.stringify(webhookBody, null, 2)}`);
         }
         return;
+    }
+    // If the webhookBody is empty, we could still be in a preview context
+    // @TODO: Figure out a way to only handleDeltaChanges *after* initial data fetching
+    const isPreview = true;
+    // Instead of re-fetching all documents, let's fetch only those which changed since the last build
+    const lastBuildTime = (0, getPluginStatus_1.getLastBuildTime)(args);
+    if (lastBuildTime && isPreview) {
+        try {
+            const deltaHandled = await (0, handleDeltaChanges_1.default)({ args, lastBuildTime, client, processingOptions });
+            if (deltaHandled) {
+                return;
+            }
+            else {
+                reporter.warn("[sanity] Couldn't retrieve latest changes. Will fetch all documents instead.");
+            }
+        }
+        catch (error) {
+            // lastBuildTime isn't a date, ignore it
+        }
     }
     reporter.info('[sanity] Fetching export stream for dataset');
     const documents = await downloadDocuments(url, config.token, { includeDrafts: overlayDrafts });
@@ -253,6 +275,8 @@ const sourceNodes = async (args, pluginConfig) => {
     }
     // do the initial sync from sanity documents to gatsby nodes
     syncAllWithGatsby();
+    // register the current build time for accessing it in handleDeltaChanges for future builds
+    (0, getPluginStatus_1.registerBuildTime)(args);
     reporter.info(`[sanity] Done! Exported ${documents.size} documents.`);
 };
 exports.sourceNodes = sourceNodes;

@@ -8,7 +8,7 @@ const clientConfig = require("./client-config")
 const isProd = process.env.NODE_ENV === "production"
 const previewEnabled = (process.env.GATSBY_IS_PREVIEW || "false").toLowerCase() === "true"
 
-console.log({previewEnabled})
+// console.log({previewEnabled})
 
 module.exports = {
   siteMetadata: {
@@ -26,7 +26,8 @@ module.exports = {
       options: {
         ...clientConfig.sanity,
         token: process.env.SANITY_READ_TOKEN,
-        watchMode: !isProd,
+        // watchMode: !isProd,
+        watchMode: false,
         overlayDrafts: !isProd || previewEnabled,
       },
     },

@@ -8,9 +8,7 @@ const axios_1 = __importDefault(require("axios"));
 const get_stream_1 = __importDefault(require("get-stream"));
 const index_1 = require("../index");
 function getDocumentStream(url, token) {
-    const auth = token ? { Authorization: `Bearer ${token}` } : {};
-    const userAgent = { 'User-Agent': `${index_1.pkgName}` };
-    const headers = Object.assign(Object.assign({}, userAgent), auth);
+    const headers = Object.assign({ 'User-Agent': `${index_1.pkgName}` }, (token ? { Authorization: `Bearer ${token}` } : {}));
     return (0, axios_1.default)({
         method: 'get',
         responseType: 'stream',

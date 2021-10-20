@@ -15,19 +15,14 @@ export interface ApiError {
     error: string;
     message: string;
 }
-export interface SanityWebhookV1Body {
-    ids: {
-        created: string[];
-        deleted: string[];
-        updated: string[];
-    };
-}
-export interface SanityWebhookV2Body {
-    __webhooksVersion: "v2";
-    operation: "create" | "update" | "delete";
+/**
+ * Body received only in delete operations.
+ * All others are handled by handleDeltaWebhook.
+ */
+export interface SanityWebhookDeleteBody {
+    operation: "delete";
     documentId: string;
     projectId?: string;
     dataset?: string;
-    after?: SanityDocument;
 }
-export declare type SanityWebhookBody = SanityWebhookV1Body | SanityWebhookV2Body;
+export declare type SanityWebhookBody = SanityWebhookDeleteBody;
