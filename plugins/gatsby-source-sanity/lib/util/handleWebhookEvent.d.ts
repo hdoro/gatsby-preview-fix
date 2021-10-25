@@ -8,4 +8,4 @@ export declare function handleWebhookEvent(args: SourceNodesArgs & {
     client: SanityClient;
     processingOptions: ProcessingOptions;
 }): Promise<boolean>;
-export declare function validateWebhookPayload(payload: SanityWebhookBody | undefined): 'delete-operation' | false;
+export declare function validateWebhookPayload(payload: SanityWebhookBody | undefined): 'v1' | 'v2' | false;
