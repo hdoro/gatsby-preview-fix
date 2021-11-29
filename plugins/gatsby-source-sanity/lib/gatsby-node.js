@@ -220,6 +220,9 @@ const sourceNodes = async (args, pluginConfig) => {
     if (!deltaHandled) {
         documents = await downloadDocuments(url, config.token, { includeDrafts: overlayDrafts });
     }
+    else {
+        console.log('Delta was handled', documents.keys());
+    }
     // sync a single document from the local cache of known documents with gatsby
     function syncWithGatsby(id) {
         const publishedId = (0, documentIds_1.unprefixId)(id);
