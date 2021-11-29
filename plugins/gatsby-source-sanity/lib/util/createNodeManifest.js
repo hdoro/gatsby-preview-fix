@@ -7,8 +7,6 @@ const debug_1 = __importDefault(require("../debug"));
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7; // ms * sec * min * hr * day
 let nodeManifestWarningWasLogged;
 function createNodeManifest(actions, args, node, publishedId) {
-    // @TODO: debug createNodeManifest
-    return;
     try {
         const { unstable_createNodeManifest } = actions;
         const { getNode } = args;

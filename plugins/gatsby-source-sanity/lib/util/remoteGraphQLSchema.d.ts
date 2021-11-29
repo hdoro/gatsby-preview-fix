@@ -1,6 +1,6 @@
 import { ListTypeNode, NamedTypeNode, NonNullTypeNode } from 'gatsby/graphql';
 import { SanityClient } from '@sanity/client';
-import { PluginConfig } from '../gatsby-node';
+import { PluginConfig } from './validateConfig';
 export declare type FieldDef = {
     type: NamedTypeNode | ListTypeNode | NonNullTypeNode;
     namedType: NamedTypeNode;

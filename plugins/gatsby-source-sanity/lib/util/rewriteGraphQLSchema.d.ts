@@ -1,5 +1,5 @@
 import { Reporter } from 'gatsby';
-import { PluginConfig } from '../gatsby-node';
+import { PluginConfig } from './validateConfig';
 interface AstRewriterContext {
     reporter: Reporter;
     config: PluginConfig;

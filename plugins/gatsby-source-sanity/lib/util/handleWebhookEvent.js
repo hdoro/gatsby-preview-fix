@@ -26,7 +26,7 @@ function handleDeleteWebhook(args, options) {
     reporter.info(`Deleted 1 document`);
     return true;
 }
-async function handleWebhookEvent(args, options) {
+function handleWebhookEvent(args, options) {
     const { webhookBody, reporter } = args;
     const validated = validateWebhookPayload(webhookBody);
     if (validated === false) {

@@ -1,5 +1,5 @@
 import { CreateResolversArgs } from 'gatsby';
-import { PluginConfig } from '../gatsby-node';
 import { GatsbyResolverMap } from '../types/gatsby';
 import { TypeMap } from './remoteGraphQLSchema';
+import { PluginConfig } from './validateConfig';
 export declare function getGraphQLResolverMap(typeMap: TypeMap, pluginConfig: PluginConfig, context: CreateResolversArgs): GatsbyResolverMap;

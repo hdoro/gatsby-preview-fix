@@ -14,8 +14,8 @@ const extendImageNode_1 = require("./images/extendImageNode");
 const cache_1 = require("./util/cache");
 const createNodeManifest_1 = __importDefault(require("./util/createNodeManifest"));
 const documentIds_1 = require("./util/documentIds");
+const downloadDocuments_1 = __importDefault(require("./util/downloadDocuments"));
 const errors_1 = require("./util/errors");
-const getAllDocuments_1 = require("./util/getAllDocuments");
 const getGraphQLResolverMap_1 = require("./util/getGraphQLResolverMap");
 const getPluginStatus_1 = require("./util/getPluginStatus");
 const handleDeltaChanges_1 = __importDefault(require("./util/handleDeltaChanges"));
@@ -23,6 +23,7 @@ const handleWebhookEvent_1 = require("./util/handleWebhookEvent");
 const normalize_1 = require("./util/normalize");
 const remoteGraphQLSchema_1 = require("./util/remoteGraphQLSchema");
 const rewriteGraphQLSchema_1 = require("./util/rewriteGraphQLSchema");
+const validateConfig_1 = __importDefault(require("./util/validateConfig"));
 let coreSupportsOnPluginInit;
 try {
     const { isGatsbyNodeLifecycleSupported } = require(`gatsby-plugin-utils`);
@@ -56,7 +57,7 @@ const initializePlugin = async ({ reporter }, pluginOptions) => {
         return;
     }
     // Actually throws in validation function, but helps typescript perform type narrowing
-    if (!validateConfig(config, reporter)) {
+    if (!(0, validateConfig_1.default)(config, reporter)) {
         throw new Error('Invalid config');
     }
     try {
@@ -153,7 +154,7 @@ const sourceNodes = async (args, pluginConfig) => {
     // `webhookBody` is always present, even when sourceNodes is called in Gatsby's initialization.
     // As such, we need to check if it has any key to work with it.
     if (webhookBody && Object.keys(webhookBody).length > 0) {
-        const webhookHandled = await (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions });
+        const webhookHandled = (0, handleWebhookEvent_1.handleWebhookEvent)(args, { client, processingOptions });
         // Even if the webhook body is invalid, let's avoid re-fetching all documents.
         // Otherwise, we'd be overloading Gatsby's preview servers on large datasets.
         if (!webhookHandled) {
@@ -215,13 +216,6 @@ const sourceNodes = async (args, pluginConfig) => {
         catch (error) {
             // lastBuildTime isn't a date, ignore it
         }
-    }
-    reporter.info('[sanity] Fetching export stream for dataset');
-    if (!deltaHandled) {
-        documents = await downloadDocuments(url, config.token, { includeDrafts: overlayDrafts });
-    }
-    else {
-        console.log('Delta was handled', documents.keys());
     }
     // sync a single document from the local cache of known documents with gatsby
     function syncWithGatsby(id) {
@@ -317,11 +311,15 @@ const sourceNodes = async (args, pluginConfig) => {
         }), (0, operators_1.map)((event) => event.documentId), (0, operators_1.bufferTime)(config.watchModeBuffer), (0, operators_1.map)((ids) => (0, lodash_1.uniq)(ids)), (0, operators_1.filter)((ids) => ids.length > 0), (0, operators_1.tap)((updateIds) => (0, debug_1.default)('The following documents updated and will be synced with gatsby: ', updateIds)), (0, operators_1.tap)((updatedIds) => syncIdsWithGatsby(updatedIds)))
             .subscribe();
     }
-    // do the initial sync from sanity documents to gatsby nodes
-    syncAllWithGatsby();
+    if (!deltaHandled) {
+        reporter.info('[sanity] Fetching export stream for dataset');
+        documents = await (0, downloadDocuments_1.default)(url, config.token, { includeDrafts: overlayDrafts });
+        reporter.info(`[sanity] Done! Exported ${documents.size} documents.`);
+        // do the initial sync from sanity documents to gatsby nodes
+        syncAllWithGatsby();
+    }
     // register the current build time for accessing it in handleDeltaChanges for future builds
     (0, getPluginStatus_1.registerBuildTime)(args);
-    reporter.info(`[sanity] Done! Exported ${documents.size} documents.`);
 };
 exports.sourceNodes = sourceNodes;
 const setFieldsOnGraphQLNodeType = async (context, pluginConfig) => {
@@ -333,42 +331,6 @@ const setFieldsOnGraphQLNodeType = async (context, pluginConfig) => {
     return fields;
 };
 exports.setFieldsOnGraphQLNodeType = setFieldsOnGraphQLNodeType;
-function validateConfig(config, reporter) {
-    if (!config.projectId) {
-        reporter.panic({
-            id: (0, documentIds_1.prefixId)(errors_1.ERROR_CODES.MissingProjectId),
-            context: { sourceMessage: '[sanity] `projectId` must be specified' },
-        });
-    }
-    if (!config.dataset) {
-        reporter.panic({
-            id: (0, documentIds_1.prefixId)(errors_1.ERROR_CODES.MissingDataset),
-            context: { sourceMessage: '[sanity] `dataset` must be specified' },
-        });
-    }
-    if (config.overlayDrafts && !config.token) {
-        reporter.warn('[sanity] `overlayDrafts` is set to `true`, but no token is given');
-    }
-    const inDevelopMode = process.env.gatsby_executing_command === 'develop';
-    if (config.watchMode && !inDevelopMode) {
-        reporter.warn('[sanity] Using `watchMode` when not in develop mode might prevent your build from completing');
-    }
-    return true;
-}
-function downloadDocuments(url, token, options = {}) {
-    return (0, getAllDocuments_1.getAllDocuments)(url, token, options).then((stream) => new Promise((resolve, reject) => {
-        const documents = new Map();
-        stream.on('data', (doc) => {
-            documents.set(doc._id, doc);
-        });
-        stream.on('end', () => {
-            resolve(documents);
-        });
-        stream.on('error', (error) => {
-            reject(error);
-        });
-    }));
-}
 function getClient(config) {
     const { projectId, dataset, token } = config;
     return new client_1.default({

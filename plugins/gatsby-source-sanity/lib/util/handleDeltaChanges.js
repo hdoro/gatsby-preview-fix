@@ -28,12 +28,13 @@ async function handleDeltaChanges({ args, lastBuildTime, client, processingOptio
         return true;
     }
     catch (error) {
+        (0, debug_1.default)(`[sanity] failed to handleDeltaChanges`, error);
         return false;
     }
 }
 exports.default = handleDeltaChanges;
 function handleChangedDocuments(args, changedDocs, processingOptions) {
-    const { reporter } = args;
+    const { reporter, actions } = args;
     const { typeMap } = processingOptions;
     return changedDocs.reduce((count, doc) => {
         const type = (0, normalize_1.getTypeName)(doc._type);
@@ -42,7 +43,7 @@ function handleChangedDocuments(args, changedDocs, processingOptions) {
             return count;
         }
         (0, debug_1.default)('%s document with ID %s', 'Changed', doc._id);
-        processingOptions.createNode((0, normalize_1.toGatsbyNode)(doc, processingOptions));
+        actions.createNode((0, normalize_1.toGatsbyNode)(doc, processingOptions));
         return count + 1;
     }, 0);
 }
