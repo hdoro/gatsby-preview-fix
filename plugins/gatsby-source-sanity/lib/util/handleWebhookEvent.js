@@ -9,13 +9,18 @@ const documentIds_1 = require("./documentIds");
 /**
  * Gets a document id received from the webhook & delete it in the store.
  */
-async function handleDeleteWebhook(args, options) {
+function handleDeleteWebhook(args, options) {
     const { webhookBody, reporter } = args;
     const { documentId: rawId, dataset, projectId } = webhookBody;
     const publishedDocumentId = (0, documentIds_1.unprefixId)(rawId);
     const config = options.client.config();
     if (projectId && dataset && (config.projectId !== projectId || config.dataset !== dataset)) {
         return false;
+    }
+    // If a draft is deleted, avoid deleting its published counterpart
+    if (rawId.startsWith('drafts.') && options.processingOptions.overlayDrafts) {
+        // Sub-optimal: this will skip deleting draft-only documents which should be deleted.
+        return true;
     }
     handleDeletedDocuments(args, [publishedDocumentId]);
     reporter.info(`Deleted 1 document`);
@@ -30,7 +35,7 @@ async function handleWebhookEvent(args, options) {
     }
     reporter.info('[sanity] Processing changed documents from webhook');
     if (validated === 'delete-operation') {
-        return await handleDeleteWebhook(args, options);
+        return handleDeleteWebhook(args, options);
     }
     return false;
 }

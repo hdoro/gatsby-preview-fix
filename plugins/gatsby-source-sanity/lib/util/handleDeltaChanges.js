@@ -22,7 +22,6 @@ async function handleDeltaChanges({ args, lastBuildTime, client, processingOptio
         const changedDocs = await client.fetch('*[!(_type match "system.**") && _updatedAt > $timestamp]', {
             timestamp: lastBuildTime.toISOString(),
         });
-        console.log({ changedDocs });
         handleChangedDocuments(args, changedDocs, processingOptions);
         (0, getPluginStatus_1.registerBuildTime)(args);
         args.reporter.info(`[sanity] ${changedDocs.length} documents updated.`);

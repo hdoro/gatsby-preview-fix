@@ -19,13 +19,13 @@ export const query = graphql`
       }
     }
   }
-`;
+`
 
 const IndexPage = ({ data: { site, posts } }) => {
   console.log({ posts })
   return (
     <div>
-      <h1>{site.title}</h1>
+      <h1>{site?.title || "No title!"}</h1>
       <div>
         {posts.edges.map(({ node }) => (
           <div key={node.id}>

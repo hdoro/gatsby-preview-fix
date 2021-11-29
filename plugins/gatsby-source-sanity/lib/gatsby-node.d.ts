@@ -7,6 +7,7 @@ export interface PluginConfig extends PluginOptions {
     graphqlTag: string;
     overlayDrafts?: boolean;
     watchMode?: boolean;
+    watchModeBuffer?: number;
 }
 export declare const onPreInit: GatsbyNode['onPreInit'];
 export declare const onPreBootstrap: GatsbyNode['onPreBootstrap'];
